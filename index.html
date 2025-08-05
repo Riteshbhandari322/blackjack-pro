@@ -1,626 +1,1088 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Blackjack Pro</title>
-  <style>
-    :root {
-      --primary: #0a3d2f;
-      --secondary: #f8c537;
-      --accent: #e74c3c;
-      --card-width: 70px;
-      --card-height: 105px;
-    }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Arial', sans-serif;
-    }
-    
-    body {
-      background: radial-gradient(circle at center, var(--primary), #06251e);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    
-    .game-container {
-      width: 100%;
-      max-width: 600px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .game-container::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(248, 197, 55, 0.1) 0%, transparent 70%);
-      z-index: -1;
-    }
-    
-    h1 {
-      color: var(--secondary);
-      text-align: center;
-      margin-bottom: 15px;
-      font-size: 28px;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    }
-    
-    .header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    
-    .wallet, .bet-display {
-      background: rgba(0, 0, 0, 0.5);
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-    }
-    
-    .wallet span, .bet-display span {
-      color: var(--secondary);
-      margin-left: 5px;
-    }
-    
-    .bet-controls {
-      display: flex;
-      justify-content: center;
-      margin: 15px 0;
-      gap: 10px;
-    }
-    
-    button {
-      background: var(--secondary);
-      color: var(--primary);
-      border: none;
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-    }
-    
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-    }
-    
-    button:active {
-      transform: translateY(1px);
-    }
-    
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-    
-    .bet-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      padding: 0;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .game-area {
-      background: rgba(0, 80, 0, 0.2);
-      border-radius: 10px;
-      padding: 15px;
-      margin: 15px 0;
-      border: 1px solid rgba(210, 180, 140, 0.2);
-      position: relative;
-    }
-    
-    .hand {
-      min-height: calc(var(--card-height) + 20px);
-      margin: 20px 0;
-      position: relative;
-    }
-    
-    .hand-title {
-      position: absolute;
-      top: -15px;
-      left: 10px;
-      background: var(--primary);
-      padding: 3px 10px;
-      border-radius: 15px;
-      font-size: 14px;
-      font-weight: bold;
-    }
-    
-    .score {
-      position: absolute;
-      top: -15px;
-      right: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 3px 10px;
-      border-radius: 15px;
-      font-size: 14px;
-      font-weight: bold;
-    }
-    
-    .cards {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding-top: 15px;
-    }
-    
-    .card {
-      width: var(--card-width);
-      height: var(--card-height);
-      background: white;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 5px;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: all 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    
-    .card.red {
-      color: #e74c3c;
-    }
-    
-    .card.black {
-      color: #333;
-    }
-    
-    .card-value {
-      font-size: 20px;
-      font-weight: bold;
-    }
-    
-    .card-suit {
-      font-size: 24px;
-      align-self: center;
-    }
-    
-    .card-value.bottom {
-      align-self: flex-end;
-      transform: rotate(180deg);
-    }
-    
-    .dealer-upcard::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, var(--primary), #111);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 30px;
-      content: '?';
-    }
-    
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-    
-    .action-btn {
-      min-width: 80px;
-    }
-    
-    #hitBtn {
-      background: #2ecc71;
-      color: white;
-    }
-    
-    #standBtn {
-      background: #e74c3c;
-      color: white;
-    }
-    
-    #doubleBtn {
-      background: #3498db;
-      color: white;
-    }
-    
-    #result {
-      text-align: center;
-      margin: 15px 0;
-      min-height: 24px;
-      font-weight: bold;
-      font-size: 18px;
-    }
-    
-    .win {
-      color: #2ecc71;
-      animation: pulse 0.5s infinite alternate;
-    }
-    
-    .lose {
-      color: #e74c3c;
-    }
-    
-    .draw {
-      color: var(--secondary);
-    }
-    
-    @keyframes pulse {
-      from { transform: scale(1); }
-      to { transform: scale(1.05); }
-    }
-    
-    @media (max-width: 500px) {
-      :root {
-        --card-width: 60px;
-        --card-height: 90px;
-      }
-      
-      .header {
-        flex-direction: column;
-        gap: 10px;
-      }
-      
-      .controls {
-        gap: 5px;
-      }
-      
-      .action-btn {
-        padding: 8px 12px;
-        font-size: 14px;
-      }
-    }
-    
-    /* Card dealing animation */
-    @keyframes dealCard {
-      0% { transform: translateY(-100px) rotateY(180deg); opacity: 0; }
-      100% { transform: translateY(0) rotateY(0); opacity: 1; }
-    }
-    
-    .dealing {
-      animation: dealCard 0.5s ease-out forwards;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ritesh Bhandari | Data Entry Executive </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --medium-text: #555;
+            --light-text: #777;
+            --border-radius: 8px;
+            --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.7;
+            color: var(--medium-text);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, #1a2530 100%);
+            color: white;
+            padding: 3rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-image {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 5px solid rgba(255, 255, 255, 0.25);
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.8rem;
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-image:hover {
+            transform: scale(1.05);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .profile-image i {
+            font-size: 5.5rem;
+            color: white;
+        }
+
+        .header-text h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.7rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header-text h2 {
+            font-size: 1.6rem;
+            font-weight: 400;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .header-text h2::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.8rem;
+            margin-top: 1rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: var(--transition);
+        }
+
+        .contact-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .contact-item i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .contact-item span {
+            font-weight: 400;
+        }
+
+        /* Section Styles */
+        section {
+            background: white;
+            margin: 2.5rem auto;
+            padding: 2.8rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        section:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        section h2 {
+            font-family: 'Poppins', sans-serif;
+            color: var(--secondary);
+            font-size: 1.9rem;
+            margin-bottom: 2rem;
+            padding-bottom: 0.7rem;
+            border-bottom: 3px solid var(--primary);
+            display: inline-block;
+            position: relative;
+        }
+
+        section h2 i {
+            margin-right: 12px;
+            color: var(--primary);
+        }
+
+        /* Summary Section */
+        .summary {
+            background: linear-gradient(to right, #f8fafc 0%, #e8f4fc 100%);
+            border-left: 4px solid var(--primary);
+            position: relative;
+        }
+
+        .summary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="%233498db" opacity="0.05"><path d="M50 0 L100 50 L50 100 L0 50 Z"/></svg>') no-repeat;
+            background-size: contain;
+        }
+
+        .summary p {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--dark-text);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Competencies Section */
+        .competencies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .competency-card {
+            background: var(--light-bg);
+            padding: 1.8rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            border-left: 3px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .competency-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(41, 128, 185, 0.05) 100%);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .competency-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .competency-card:hover::before {
+            opacity: 1;
+        }
+
+        .competency-card h3 {
+            color: var(--dark-text);
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .competency-card h3 i {
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+        .competency-card ul {
+            padding-left: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .competency-card li {
+            margin-bottom: 0.7rem;
+            position: relative;
+            color: var(--medium-text);
+        }
+
+        .competency-card li::before {
+            content: '▹';
+            position: absolute;
+            left: -1.5rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Experience Section */
+        .timeline {
+            position: relative;
+            margin: 2.5rem 0 0 2.5rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+            padding-left: 2.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -3.1rem;
+            top: 8px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 4px solid white;
+            box-shadow: 0 0 0 3px var(--primary);
+            transition: var(--transition);
+        }
+
+        .timeline-item:hover::before {
+            transform: scale(1.2);
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .timeline-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .timeline-header h3 {
+            font-size: 1.35rem;
+            color: var(--dark-text);
+            font-weight: 600;
+        }
+
+        .timeline-header .date {
+            background: #e1f0fa;
+            color: var(--primary);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .timeline-position {
+            font-style: italic;
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .timeline-content ul {
+            padding-left: 1.5rem;
+        }
+
+        .timeline-content li {
+            margin-bottom: 0.8rem;
+            position: relative;
+            color: var(--medium-text);
+        }
+
+        .timeline-content li::before {
+            content: '▹';
+            position: absolute;
+            left: -1.5rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Education & Certifications */
+        .education-certs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .education, .certifications {
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            border-left: 3px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .education:hover, .certifications:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .education h3, .certifications h3 {
+            color: var(--dark-text);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .education h3::after, .certifications h3::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .edu-item, .cert-item {
+            margin-bottom: 2rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .edu-item::before, .cert-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0.7;
+        }
+
+        .edu-item h3, .cert-item h3 {
+            color: var(--dark-text);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .edu-item p, .cert-item p {
+            color: var(--medium-text);
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .edu-item .date, .cert-item .date {
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 20px;
+        }
+
+        /* Technical Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .skill-category {
+            background: var(--light-bg);
+            padding: 1.8rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            border-top: 3px solid var(--primary);
+        }
+
+        .skill-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .skill-category h3 {
+            color: var(--dark-text);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .skill-category h3 i {
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+        .skill-category ul {
+            list-style: none;
+        }
+
+        .skill-category li {
+            padding: 0.8rem 0;
+            border-bottom: 1px dashed #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .skill-category li:hover {
+            padding-left: 5px;
+        }
+
+        .skill-category li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-level {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(52, 152, 219, 0.1);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+        }
+
+        /* Progress bars for skills */
+        .skill-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 0.3rem;
+            overflow: hidden;
+        }
+
+        .skill-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 4px;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, var(--secondary) 0%, #1a2530 100%);
+            color: white;
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="%23ffffff" opacity="0.03"><path d="M0 0 L100 100 M100 0 L0 100"/></svg>');
+            background-size: 60px 60px;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-content h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .footer-content p {
+            margin: 1.5rem 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.05rem;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 1.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.3rem;
+            transition: var(--transition);
+        }
+
+        .social-icons a:hover {
+            background: var(--primary);
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        .copyright {
+            margin-top: 2rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Download Button */
+        .download-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+            z-index: 100;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+        }
+
+        .download-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        .download-tooltip {
+            position: absolute;
+            right: 70px;
+            background: var(--secondary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: var(--transition);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .download-btn:hover .download-tooltip {
+            opacity: 1;
+            right: 80px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 15px;
+            }
+            
+            section {
+                padding: 2rem;
+            }
+            
+            .header-text h1 {
+                font-size: 2.2rem;
+            }
+            
+            .header-text h2 {
+                font-size: 1.4rem;
+            }
+            
+            .contact-info {
+                gap: 1rem;
+            }
+            
+            .timeline {
+                margin-left: 1.5rem;
+            }
+            
+            .timeline::before {
+                left: -1.5rem;
+            }
+            
+            .timeline-item {
+                padding-left: 2rem;
+            }
+            
+            .timeline-item::before {
+                left: -2.1rem;
+            }
+
+            .download-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-image {
+                width: 130px;
+                height: 130px;
+            }
+            
+            .header-text h1 {
+                font-size: 1.9rem;
+            }
+            
+            section {
+                padding: 1.8rem;
+            }
+            
+            section h2 {
+                font-size: 1.6rem;
+            }
+
+            .competencies-grid, .skills-grid, .education-certs {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .timeline-header .date {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="game-container">
-    <h1>♠️ Ultimate Blackjack Pro ♦️</h1>
-    
-    <div class="header">
-      <div class="wallet">Wallet: <span id="wallet">10,000</span></div>
-      <div class="bet-display">Bet: <span id="bet">500</span></div>
-    </div>
-    
-    <div class="bet-controls">
-      <button class="bet-btn" onclick="changeBet(-100)">-</button>
-      <button class="bet-btn" onclick="changeBet(-50)">-50</button>
-      <button class="bet-btn" onclick="changeBet(50)">+50</button>
-      <button class="bet-btn" onclick="changeBet(100)">+</button>
-    </div>
-    
-    <div class="game-area">
-      <div class="hand">
-        <div class="hand-title">Dealer</div>
-        <div class="score" id="dealerScore">0</div>
-        <div class="cards" id="dealerHand"></div>
-      </div>
-      
-      <div class="hand">
-        <div class="hand-title">Player</div>
-        <div class="score" id="playerScore">0</div>
-        <div class="cards" id="playerHand"></div>
-      </div>
-    </div>
-    
-    <div id="result"></div>
-    
-    <div class="controls">
-      <button id="hitBtn" class="action-btn" onclick="hit()">Hit</button>
-      <button id="standBtn" class="action-btn" onclick="stand()">Stand</button>
-      <button id="doubleBtn" class="action-btn" onclick="doubleDown()">Double</button>
-      <button class="action-btn" onclick="newGame()">New Game</button>
-    </div>
-  </div>
+    <!-- Header Section -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="profile-image">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="header-text">
+                    <h1>Ritesh Bhandari</h1>
+                    <h2>Data Entry Executive</h2>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>+91-79829-10048</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>riteshkumarbhandari85@gmail.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Delhi, India 110017 Chirage delhi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  <script>
-    // Game state
-    let deck = [];
-    let playerHand = [];
-    let dealerHand = [];
-    let wallet = 10000;
-    let currentBet = 500;
-    let gameActive = false;
-    
-    // DOM elements
-    const hitBtn = document.getElementById('hitBtn');
-    const standBtn = document.getElementById('standBtn');
-    const doubleBtn = document.getElementById('doubleBtn');
-    
-    // Initialize game
-    function newGame() {
-      if (wallet < currentBet) {
-        showMessage("Not enough funds!");
-        return;
-      }
-      
-      // Reset hands
-      playerHand = [];
-      dealerHand = [];
-      document.getElementById('playerHand').innerHTML = '';
-      document.getElementById('dealerHand').innerHTML = '';
-      document.getElementById('result').textContent = '';
-      document.getElementById('result').className = '';
-      
-      // Create and shuffle deck
-      createDeck();
-      
-      // Deal initial cards with animation
-      setTimeout(() => dealCard(playerHand, 'playerHand'), 100);
-      setTimeout(() => dealCard(dealerHand, 'dealerHand', true), 300);
-      setTimeout(() => dealCard(playerHand, 'playerHand'), 500);
-      setTimeout(() => {
-        dealCard(dealerHand, 'dealerHand');
-        gameActive = true;
-        updateControls();
-        
-        // Check for blackjack
-        if (calculateHand(playerHand) === 21) {
-          setTimeout(() => stand(), 800);
-        }
-      }, 700);
-    }
-    
-    function createDeck() {
-      deck = [];
-      const suits = ['♠', '♥', '♣', '♦'];
-      const values = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-      
-      for (let suit of suits) {
-        for (let value of values) {
-          deck.push({ 
-            value, 
-            suit, 
-            color: (suit === '♥' || suit === '♦') ? 'red' : 'black' 
-          });
-        }
-      }
-      
-      // Shuffle using Fisher-Yates algorithm
-      for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-      }
-    }
-    
-    function dealCard(hand, elementId, isHidden = false) {
-      const card = deck.pop();
-      hand.push(card);
-      
-      const cardEl = document.createElement('div');
-      cardEl.className = `card ${card.color} dealing`;
-      
-      cardEl.innerHTML = `
-        <div class="card-value">${card.value}</div>
-        <div class="card-suit">${card.suit}</div>
-        <div class="card-value bottom">${card.value}</div>
-      `;
-      
-      if (isHidden) {
-        cardEl.classList.add('dealer-upcard');
-      }
-      
-      document.getElementById(elementId).appendChild(cardEl);
-      updateScores();
-    }
-    
-    function calculateHand(hand) {
-      let total = 0;
-      let aces = 0;
-      
-      for (let card of hand) {
-        if (['J','Q','K'].includes(card.value)) {
-          total += 10;
-        } else if (card.value === 'A') {
-          total += 11;
-          aces++;
-        } else {
-          total += parseInt(card.value);
-        }
-      }
-      
-      // Adjust for aces if bust
-      while (total > 21 && aces > 0) {
-        total -= 10;
-        aces--;
-      }
-      
-      return total;
-    }
-    
-    function updateScores() {
-      const playerTotal = calculateHand(playerHand);
-      document.getElementById('playerScore').textContent = playerTotal;
-      
-      // Highlight if blackjack or bust
-      if (playerTotal === 21 && playerHand.length === 2) {
-        document.getElementById('playerScore').style.color = 'var(--secondary)';
-      } else if (playerTotal > 21) {
-        document.getElementById('playerScore').style.color = 'var(--accent)';
-      } else {
-        document.getElementById('playerScore').style.color = 'white';
-      }
-      
-      if (gameActive) {
-        // Only show dealer's first card during game
-        document.getElementById('dealerScore').textContent = calculateHand([dealerHand[0]]);
-      } else {
-        document.getElementById('dealerScore').textContent = calculateHand(dealerHand);
-      }
-    }
-    
-    function hit() {
-      if (!gameActive) return;
-      
-      const card = dealCard(playerHand, 'playerHand');
-      
-      if (calculateHand(playerHand) > 21) {
-        endGame('lose');
-      } else if (calculateHand(playerHand) === 21) {
-        stand();
-      }
-    }
-    
-    function stand() {
-      if (!gameActive) return;
-      
-      gameActive = false;
-      updateControls();
-      
-      // Reveal dealer's card
-      document.querySelector('#dealerHand .dealer-upcard')?.classList.remove('dealer-upcard');
-      
-      // Dealer draws until 17 or higher
-      const dealerDraw = () => {
-        if (calculateHand(dealerHand) < 17) {
-          setTimeout(() => {
-            dealCard(dealerHand, 'dealerHand');
-            dealerDraw();
-          }, 500);
-        } else {
-          determineWinner();
-        }
-      };
-      
-      dealerDraw();
-    }
-    
-    function doubleDown() {
-      if (!gameActive || playerHand.length !== 2) return;
-      
-      if (currentBet * 2 > wallet) {
-        showMessage("Not enough funds to double!");
-        return;
-      }
-      
-      currentBet *= 2;
-      document.getElementById('bet').textContent = currentBet;
-      hit();
-      stand();
-    }
-    
-    function determineWinner() {
-      const playerTotal = calculateHand(playerHand);
-      const dealerTotal = calculateHand(dealerHand);
-      
-      if (playerTotal > 21) {
-        endGame('lose');
-      } else if (dealerTotal > 21) {
-        endGame('win');
-      } else if (playerTotal > dealerTotal) {
-        endGame('win');
-      } else if (playerTotal < dealerTotal) {
-        endGame('lose');
-      } else {
-        endGame('draw');
-      }
-    }
-    
-    function endGame(result) {
-      let message = '';
-      const isBlackjack = calculateHand(playerHand) === 21 && playerHand.length === 2;
-      
-      switch (result) {
-        case 'win':
-          const winAmount = isBlackjack ? Math.floor(currentBet * 1.5) : currentBet;
-          wallet += winAmount;
-          message = isBlackjack 
-            ? `Blackjack! You win ₹${winAmount.toLocaleString()}!` 
-            : `You win ₹${winAmount.toLocaleString()}!`;
-          document.getElementById('result').className = 'win';
-          break;
-        case 'lose':
-          wallet -= currentBet;
-          message = `You lose ₹${currentBet.toLocaleString()}`;
-          document.getElementById('result').className = 'lose';
-          break;
-        case 'draw':
-          message = "It's a draw!";
-          document.getElementById('result').className = 'draw';
-          break;
-      }
-      
-      document.getElementById('wallet').textContent = wallet.toLocaleString();
-      document.getElementById('result').textContent = message;
-      updateControls();
-    }
-    
-    function changeBet(amount) {
-      const newBet = currentBet + amount;
-      
-      if (newBet < 100) {
-        showMessage("Minimum bet is ₹100");
-        return;
-      }
-      
-      if (newBet > wallet) {
-        showMessage("Not enough funds");
-        return;
-      }
-      
-      currentBet = newBet;
-      document.getElementById('bet').textContent = currentBet;
-    }
-    
-    function updateControls() {
-      hitBtn.disabled = !gameActive;
-      standBtn.disabled = !gameActive;
-      doubleBtn.disabled = !gameActive || playerHand.length !== 2 || currentBet * 2 > wallet;
-    }
-    
-    function showMessage(msg) {
-      const resultEl = document.getElementById('result');
-      resultEl.textContent = msg;
-      resultEl.className = '';
-      setTimeout(() => {
-        if (resultEl.textContent === msg) {
-          resultEl.textContent = '';
-        }
-      }, 2000);
-    }
-    
-    // Start first game
-    newGame();
-  </script>
+    <div class="container">
+        <!-- Professional Summary -->
+        <section class="summary">
+            <h2><i class="fas fa-user-tie"></i> Professional Summary</h2>
+            <p>Detail-oriented Data Entry Specialist with 7 months of professional experience managing database systems at CDC. Certified in advanced data entry techniques with exceptional typing speed (50+ WPM) and accuracy (99%). Proven track record in data verification, digital record organization, and maintaining database integrity. Currently pursuing Bachelor of Computer Applications (BCA) to enhance technical capabilities and expand career opportunities in data management and analysis.</p>
+        </section>
+
+        <!-- Core Competencies -->
+        <section class="competencies">
+            <h2><i class="fas fa-star"></i> Core Competencies</h2>
+            <div class="competencies-grid">
+                <div class="competency-card">
+                    <h3><i class="fas fa-database"></i> Data Management</h3>
+                    <ul>
+                        <li>Database maintenance & integrity verification</li>
+                        <li>Data cleaning and validation techniques</li>
+                        <li>Records organization and retrieval systems</li>
+                    </ul>
+                </div>
+                <div class="competency-card">
+                    <h3><i class="fas fa-laptop-code"></i> Technical Skills</h3>
+                    <ul>
+                        <li>Advanced data entry (certified professional)</li>
+                        <li>MS Office Suite (Excel, Word, Access)</li>
+                        <li>Google Workspace applications</li>
+                        <li>Basic SQL for data querying</li>
+                    </ul>
+                </div>
+                <div class="competency-card">
+                    <h3><i class="fas fa-tachometer-alt"></i> Efficiency Metrics</h3>
+                    <ul>
+                        <li>50+ WPM typing speed with 99% accuracy</li>
+                        <li>Processed 500+ daily entries with minimal errors</li>
+                        <li>Improved data retrieval efficiency by 30%</li>
+                    </ul>
+                </div>
+                <div class="competency-card">
+                    <h3><i class="fas fa-check-circle"></i> Quality Assurance</h3>
+                    <ul>
+                        <li>Proofreading & data validation expertise</li>
+                        <li>Implemented error-reduction protocols</li>
+                        <li>Performed routine data integrity audits</li>
+                    </ul>
+                </div>
+                <div class="competency-card">
+                    <h3><i class="fas fa-folder-open"></i> Organizational Skills</h3>
+                    <ul>
+                        <li>Digital filing & records management</li>
+                        <li>Data categorization and indexing</li>
+                        <li>Workflow optimization strategies</li>
+                    </ul>
+                </div>
+                <div class="competency-card">
+                    <h3><i class="fas fa-language"></i> Language Proficiency</h3>
+                    <ul>
+                        <li>Hindi (Native proficiency)</li>
+                        <li>English (Intermediate - B1 level)</li>
+                        <li>Effective written communication skills</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Professional Experience -->
+        <section class="experience">
+            <h2><i class="fas fa-briefcase"></i> Professional Experience</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-header">
+                        <h3>CDC (Centers for Disease Control), New Delhi</h3>
+                        <div class="date">Aug 2024 - Mar 2025</div>
+                    </div>
+                    <div class="timeline-position">Data Entry Executive</div>
+                    <div class="timeline-content">
+                        <ul>
+                            <li>Processed and verified 500+ daily data entries with 99% accuracy for critical health databases</li>
+                            <li>Developed and implemented verification protocols that reduced data errors by 25%</li>
+                            <li>Reorganized digital filing system using categorization techniques, improving retrieval efficiency by 30%</li>
+                            <li>Conducted routine data integrity audits ensuring 100% compliance with organizational standards</li>
+                            <li>Collaborated with team members to streamline data entry processes and improve workflow efficiency</li>
+                            <li>Maintained confidentiality of sensitive health information in compliance with data protection regulations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Education & Certifications -->
+        <section class="education-certifications">
+            <h2><i class="fas fa-graduation-cap"></i> Education & Certifications</h2>
+            <div class="education-certs">
+                <div class="education">
+                    <h3>Education</h3>
+                    <div class="edu-item">
+                        <h3>Bachelor of Computer Applications (BCA)</h3>
+                        <p>Indira Gandhi National Open University (IGNOU)</p>
+                        <div class="date">Bachelor of Computer Applications (BCA), First Year (Enrolled July 14, 2025)</div>
+                    </div>
+                    <div class="edu-item">
+                        <h3>Higher Secondary Education (12th Grade)</h3>
+                        <p>BPMK Inter College, Madhubani, Bihar</p>
+                        <p>Bihar School Examination(BSEB)  PATNA</p>
+                        <div class="date">2022 - 2024</div>
+                    </div>
+                </div>
+                
+                <div class="certifications">
+                    <h3>Certifications</h3>
+                    <div class="cert-item">
+                        <h3>Certified Advanced Data Entry Specialist (CADES)</h3>
+                        <p>National Skill Development Corporation</p>
+                        <div class="date">2023</div>
+                    </div>
+                    <div class="cert-item">
+                        <h3>Microsoft Office Specialist Certification</h3>
+                        <p>Excel and Word Expert Level</p>
+                        <div class="date">2022</div>
+                    </div>
+                    <div class="cert-item">
+                        <h3>Data Management Fundamentals</h3>
+                        <p>Online Course - Coursera</p>
+                        <div class="date">2024</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Proficiencies -->
+        <section class="technical">
+            <h2><i class="fas fa-code"></i> Technical Proficiencies</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3><i class="fas fa-database"></i> Database Tools</h3>
+                    <ul>
+                        <li>
+                            MS Access
+                            <span class="skill-level">Advanced</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 90%"></div>
+                            </div>
+                        </li>
+                        <li>
+                            SQL Basics
+                            <span class="skill-level">Intermediate</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 70%"></div>
+                            </div>
+                        </li>
+                        <li>
+                            Google Sheets
+                            <span class="skill-level">Advanced</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 85%"></div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3><i class="fas fa-file-excel"></i> Productivity Software</h3>
+                    <ul>
+                        <li>
+                            Microsoft Excel
+                            <span class="skill-level">Expert</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 95%"></div>
+                            </div>
+                        </li>
+                        <li>
+                            Microsoft Word
+                            <span class="skill-level">Advanced</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 90%"></div>
+                            </div>
+                        </li>
+                        <li>
+                            Google Workspace
+                            <span class="skill-level">Advanced</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 85%"></div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3><i class="fas fa-desktop"></i> Operating Systems</h3>
+                    <ul>
+                        <li>
+                            Windows 10/11
+                            <span class="skill-level">Expert</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 95%"></div>
+                            </div>
+                        </li>
+                        <li>
+                            Linux (Ubuntu)
+                            <span class="skill-level">Basic</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 40%"></div>
+                            </div>
+                        </li>
+                        <li>
+                            macOS
+                            <span class="skill-level">Intermediate</span>
+                            <div class="skill-bar-container">
+                                <div class="skill-bar" style="width: 60%"></div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Section for Projects/Achievements -->
+        <section class="achievements">
+            <h2><i class="fas fa-trophy"></i> Key Achievements</h2>
+            <div class="competencies-grid">
+                <div class="competency-card">
+                    <h3><i class="fas fa-chart-line"></i> Performance Excellence</h3>
+                    <ul>
+                        <li>Recognized as "Employee of the Month" for maintaining highest accuracy rate (99.2%)</li>
+                        <li>Exceeded daily data entry targets by 20% consistently for 3 consecutive months</li>
+                    </ul>
+                </div>
+                <div class="competency-card">
+                    <h3><i class="fas fa-lightbulb"></i> Process Improvements</h3>
+                    <ul>
+                        <li>Developed a data validation checklist that reduced errors by 25%</li>
+                        <li>Created keyboard shortcut guide that improved team productivity by 15%</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <h3>Ritesh Bhandari</h3>
+                <p>Data Entry Specialist | Database Management Professional | Accuracy-Driven Performer</p>
+                <div class="social-icons">
+                    <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="mailto:riteshkumarbhandari85@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="tel:+917982910048" title="Call"><i class="fas fa-phone"></i></a>
+                </div>
+                <p class="copyright">&copy; <span id="year"></span> Ritesh Bhandari. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Download Button -->
+    <button class="download-btn" id="downloadBtn" title="Download Resume">
+        <i class="fas fa-download"></i>
+        <span class="download-tooltip">Download PDF</span>
+    </button>
+
+    <script>
+        // Animation for section elements when they come into view
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('section');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Set current year in footer
+            document.getElementById('year').textContent = new Date().getFullYear();
+
+            // Download button functionality
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.addEventListener('click', function() {
+                // This would normally trigger a PDF download
+                // For demo purposes, we'll just show an alert
+                alert('In a real implementation, this would download the resume as a PDF.');
+                
+                // In a real implementation, you might use:
+                // window.print(); or link to a PDF version
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </body>
 </html>
-
-
